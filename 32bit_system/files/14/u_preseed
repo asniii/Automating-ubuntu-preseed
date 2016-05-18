@@ -1,0 +1,134 @@
+########################################################################
+#### preseed by aditya
+
+####################################################################
+# General
+####################################################################
+
+# Once installation is complete, automatically power off.
+# d-i finish-install/reboot_in_progress note
+d-i debian-installer/exit/poweroff boolean true
+d-i ubiquity/summary note
+ubiquity ubiquity/reboot boolean true
+ubiquity ubiquity/poweroff boolean true
+
+# Automatically download and install stable updates?
+unattended-upgrades unattended-upgrades/enable_auto_updates boolean true
+
+
+####################################################################
+# Networking
+####################################################################
+
+# Network Configuration
+d-i netcfg/enable boolean true
+d-i netcfg/choose_interface select auto
+d-i netcfg/disable_dhcp boolean false
+
+
+####################################################################
+# Disk Partitioning / Boot loader
+####################################################################
+
+### Disk Partitioning ###
+
+# Configure auto partitioner
+ubiquity partman-auto/init_automatically_partition select Guided - use entire disk
+ubiquity partman-auto/disk string /dev/sda
+ubiquity partman-auto/method string regular
+ubiquity partman-auto/choose_recipe select All files in one partition (recommended for new users)
+ubiquity partman/confirm_write_new_label boolean true
+ubiquity partman/choose_partition select Finish partitioning and write changes to disk
+ubiquity partman/confirm boolean  true
+
+
+####################################################################
+# Localizations / Timezone
+####################################################################
+
+### Keyboard selection ###
+d-i keyboard-configuration/layoutcode string us
+d-i keyboard-configuration/variantcode string
+
+### Locale ###
+d-i debian-installer/locale string en_US
+
+### Timezone ###
+d-i time/zone select Europe/Amsterdam
+d-i clock-setup/utc boolean true
+d-i clock-setup/ntp boolean false
+d-i console-setup/ask_detect boolean false
+d-i console-setup/layoutcode string us
+
+d-i localechooser/supported-locales multiselect nl_NL, nl_BE, fr_BE
+
+
+
+####################################################################
+# User Creation
+####################################################################
+
+# Root User
+d-i passwd/root-login boolean false
+
+# Mortal User
+d-i passwd/user-fullname string nitc
+d-i passwd/username string nitc
+d-i passwd/user-password password nitc
+d-i passwd/user-password-again password nitc
+d-i passwd/auto-login boolean true
+d-i user-setup/allow-password-weak boolean true
+
+
+####################################################################
+# Some extras
+####################################################################
+tasksel tasksel/first multiselect ubuntu-desktop
+d-i pkgsel/include string build-essential isomaster uck clamav clamtk openconnect adobe-flashplugin vmware-view-client
+
+# installing languages
+# Language pack selection
+d-i pkgsel/language-packs multiselect nl, fr, en
+
+# Whether to upgrade packages after debootstrap.
+# Allowed values: none, safe-upgrade, full-upgrade
+d-i pkgsel/upgrade select none
+
+# Policy for applying updates. May be "none" (no automatic updates),
+#d-i pkgsel/update-policy select unattended-upgrades
+
+# By default, the system's locate database will be updated after the
+# installer has finished installing most packages. This may take a while, so
+# if you don't want it, you can set this to "false" to turn it off.
+#d-i pkgsel/updatedb boolean true
+
+# This command is run just before the install finishes, but when there is
+# still a usable /target directory. You can chroot to /target and use it
+# directly, or use the apt-install and in-target commands to easily install
+# packages and run commands in the target system.
+#d-i preseed/late_command string apt-install zsh; in-target chsh -s /bin/zsh
+
+# And now we REALLY run with it!!
+d-i preseed/late_command string \
+in-target apt-get remove unity-scope-imdb unity-scope-musicstores unity-scope-zotero unity-scope-click-autopilot \
+in-target apt-get remove unity-scope-deviantart unity-scope-gallica unity-scope-gdocs unity-scope-github unity-scope-googlenews \
+in-target apt-get remove unity-scope-launchpad unity-scope-mediascanner unity-scope-onlinemusic unity-scope-openweathermap \
+in-target apt-get remove unity-scope-soundcloud unity-scope-sshsearch unity-scope-yahoostock unity-lens-photos unity-lens-video \
+in-target apt-get remove unity-scope-audacious unity-scope-chromiumbookmarks unity-scope-clementine unity-scope-click unity-scope-colourlovers \
+in-target apt-get remove unity-scope-gdrive unity-scope-gmusicbrowser unity-scope-gourmet unity-scope-guayadeque unity-scope-mediascanner2 \
+in-target apt-get remove unity-scope-musique unity-scope-openclipart unity-scope-texdoc unity-scope-tomboy unity-scope-video-remote \
+in-target apt-get remove unity-scope-virtualbox unity-scope-yelp unity-webapps-service account-plugin-ubuntuone ubuntu-purchase-service \
+
+in-target cp /cdrom/preseed/install.sh . ;\
+in-target chmod +x install.sh ;\
+in-target cp /cdrom/preseed/vpn.zip . ;\
+in-target unzip vpn.zip ;\
+in-target chmod +x vpn/vpn_install.sh ;\
+in-target sh vpn/vpn_install.sh ;\
+in-target sh install.sh ;\
+in-target rm install.sh
+
+# run this command after the install
+# /target is the newly-installed system
+# oem-config-prepare sets the first run wizard for next login
+# ubiquity ubiquity/success_command string chroot /target oem-config-prepare
